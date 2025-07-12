@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtualenv
+.venv/
+
+# Dagster interní data
+dagster_home/
+
+# Editor configy
+.vscode/
+.idea/
+
+# OS-specific
+.DS_Store
+
+

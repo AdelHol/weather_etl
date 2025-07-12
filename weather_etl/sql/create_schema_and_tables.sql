@@ -1,0 +1,82 @@
+CREATE SCHEMA IF NOT EXISTS reporting_data;
+
+CREATE TABLE IF NOT EXISTS reporting_data.weather_current (
+    id SERIAL PRIMARY KEY,
+    city VARCHAR(50) NOT NULL,
+    as_of TIMESTAMP NOT NULL,
+    temp_c DOUBLE PRECISION,
+    temp_f DOUBLE PRECISION,
+    is_day SMALLINT,
+    condition_text TEXT,
+    condition_icon TEXT,
+    condition_code INTEGER,
+    wind_mph DOUBLE PRECISION,
+    wind_kph DOUBLE PRECISION,
+    wind_degree INTEGER,
+    wind_dir VARCHAR(10),
+    pressure_mb DOUBLE PRECISION,
+    pressure_in DOUBLE PRECISION,
+    precip_mm DOUBLE PRECISION,
+    precip_in DOUBLE PRECISION,
+    humidity INTEGER,
+    cloud INTEGER,
+    feelslike_c DOUBLE PRECISION,
+    feelslike_f DOUBLE PRECISION,
+    windchill_c DOUBLE PRECISION,
+    windchill_f DOUBLE PRECISION,
+    heatindex_c DOUBLE PRECISION,
+    heatindex_f DOUBLE PRECISION,
+    dewpoint_c DOUBLE PRECISION,
+    dewpoint_f DOUBLE PRECISION,
+    vis_km DOUBLE PRECISION,
+    vis_miles DOUBLE PRECISION,
+    gust_mph DOUBLE PRECISION,
+    gust_kph DOUBLE PRECISION,
+    uv DOUBLE PRECISION,
+    fetched_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS reporting_data.weather_forecast (
+    id SERIAL PRIMARY KEY,
+    city VARCHAR(50) NOT NULL,
+    forecast_for TIMESTAMP NOT NULL,
+    temp_c DOUBLE PRECISION,
+    temp_f DOUBLE PRECISION,
+    is_day SMALLINT,
+    condition_text TEXT,
+    condition_icon TEXT,
+    condition_code INTEGER,
+    wind_mph DOUBLE PRECISION,
+    wind_kph DOUBLE PRECISION,
+    wind_degree INTEGER,
+    wind_dir VARCHAR(10),
+    pressure_mb DOUBLE PRECISION,
+    pressure_in DOUBLE PRECISION,
+    precip_mm DOUBLE PRECISION,
+    precip_in DOUBLE PRECISION,
+    humidity INTEGER,
+    cloud INTEGER,
+    feelslike_c DOUBLE PRECISION,
+    feelslike_f DOUBLE PRECISION,
+    windchill_c DOUBLE PRECISION,
+    windchill_f DOUBLE PRECISION,
+    heatindex_c DOUBLE PRECISION,
+    heatindex_f DOUBLE PRECISION,
+    dewpoint_c DOUBLE PRECISION,
+    dewpoint_f DOUBLE PRECISION,
+    will_it_rain SMALLINT,
+    chance_of_rain SMALLINT,
+    vis_km DOUBLE PRECISION,
+    vis_miles DOUBLE PRECISION,
+    gust_mph DOUBLE PRECISION,
+    gust_kph DOUBLE PRECISION,
+    uv DOUBLE PRECISION,
+    prediction_generated_at TIMESTAMP NOT NULL,
+    fetched_at TIMESTAMP NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_weather_current
+  ON reporting_data.weather_current(city, as_of);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_weather_forecast
+  ON reporting_data.weather_forecast(city, forecast_for, prediction_generated_at);
