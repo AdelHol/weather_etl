@@ -35,3 +35,4 @@ Data by měla být k dispozici pro uvedené účely s **minimálními časovými
 ### Část 2: Načtení dat
 
 Vytvořte **Jupyter Notebook**, ve kterém načtete data z databáze s **poslední verzí predikce pro každou hodinu**.
+
