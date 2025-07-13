@@ -49,6 +49,7 @@ ON CONFLICT (city, forecast_for, prediction_generated_at) DO UPDATE SET fetched_
 
 # === Helper Functions ===
 def fetch_weather_data(city, context, forecast=True):
+    """Fetch weather data (forecast or historical) for a specific city using WeatherAPI."""
     url = (
         "http://api.weatherapi.com/v1/forecast.json"
         if forecast
@@ -68,6 +69,7 @@ def fetch_weather_data(city, context, forecast=True):
 
 
 def insert_current_weather(cur, city, data, fetched_at):
+    """Insert current weather data into the weather_current table."""
     curr = data["current"]
     as_of = datetime.fromtimestamp(curr["last_updated_epoch"])
     values = (
@@ -108,6 +110,7 @@ def insert_current_weather(cur, city, data, fetched_at):
 
 
 def insert_forecast_weather(cur, city, forecast_data, gen_time, fetched_at):
+    """Insert hourly forecast data for a city into the weather_forecast table."""
     for day in forecast_data["forecast"]["forecastday"]:
         for hour in day["hour"]:
             forecast_time = datetime.fromtimestamp(hour["time_epoch"])
@@ -152,6 +155,7 @@ def insert_forecast_weather(cur, city, forecast_data, gen_time, fetched_at):
 
 
 def backfill_missing_data(cur, city, context):
+    """Backfill missing current weather data (15-min resolution, up to 6 hours back)."""
     backfill_count = 0
     for offset in range(1, 6 * 4 + 1):
         check_time = (datetime.utcnow() - timedelta(minutes=offset * 15)).replace(
@@ -173,9 +177,10 @@ def backfill_missing_data(cur, city, context):
                     backfill_count += 1
     return backfill_count
 
+
 @asset(required_resource_keys={"pg_conn"})
 def test_db_connection(context):
-    """Verify database connection."""
+    """Check if a working PostgreSQL connection can be established."""
     try:
         conn = context.resources.pg_conn
         context.log.info("DB connection successful.")
@@ -187,6 +192,7 @@ def test_db_connection(context):
 
 @asset(required_resource_keys={"pg_conn"}, deps=[test_db_connection])
 def create_tables(context):
+    """Create database schema and weather tables from SQL script if not already present."""
     conn = context.resources.pg_conn
     cur = conn.cursor()
     try:
@@ -206,6 +212,7 @@ def create_tables(context):
 
 @asset(required_resource_keys={"pg_conn"})
 def fetch_and_store_all_cities(context):
+    """Fetch and store current + forecast data for all cities, including backfilling missing records."""
     conn = context.resources.pg_conn
     cur = conn.cursor()
     errors = []
