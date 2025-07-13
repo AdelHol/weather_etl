@@ -46,8 +46,6 @@ INSERT INTO reporting_data.weather_forecast (
 ON CONFLICT (city, forecast_for, prediction_generated_at) DO UPDATE SET fetched_at = EXCLUDED.fetched_at
 """
 
-
-# === Helper Functions ===
 def fetch_weather_data(city, context, forecast=True):
     """Fetch weather data (forecast or historical) for a specific city using WeatherAPI."""
     url = (
