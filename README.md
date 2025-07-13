@@ -63,10 +63,5 @@ Projekt je rozdělen do několika částí:
   - Porovnání predikce s realitou
   - Vizualizace pomocí `plotly` 
 
-### 4. Bezpečnost
 
-- API klíče a přístupové údaje jsou načítány z `.env` souboru
-- `.env` **není součástí repozitáře** – musí být vytvořen ručně
-
-Ukázka `.env`:
 
