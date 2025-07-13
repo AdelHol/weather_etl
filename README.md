@@ -62,7 +62,7 @@ Projekt je rozdělen do několika částí:
   - Načtení aktuálních a predikovaných dat
   - Výpočet chyb (MAE, RMSE, směrodatná odchylka)
   - Porovnání predikce s realitou
-  - Vizualizace pomocí `plotly` 
+  - Vizualizace pomocí `matplotlib` 
 
 
 

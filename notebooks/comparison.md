@@ -61,17 +61,11 @@ def compute_forecast_error_std(df, metrics, city_filter=None):
 
     return pd.DataFrame(results)
 
-def plot_metrics_plotly(df, metrics, time_col="as_of", city_filter=None):
+def plot_metrics_matplotlib(df, metrics, time_col="as_of", city_filter=None):
     """
-    General Plotly chart function for either:
+    Matplotlib chart function for:
     - Actual vs Forecast (if *_actual and *_forecast columns exist)
     - Measured values over time (otherwise)
-
-    Parameters:
-        df: pandas DataFrame
-        metrics: list of metric names (e.g. 'temp_c')
-        time_col: column for x-axis ('as_of' or 'as_of_hour')
-        city_filter: optional string to filter a single city
     """
     filtered_df = df.copy()
 
@@ -89,52 +83,37 @@ def plot_metrics_plotly(df, metrics, time_col="as_of", city_filter=None):
         actual_col = f"{metric}_actual"
         forecast_col = f"{metric}_forecast"
 
-        fig = go.Figure()
+        plt.figure(figsize=(10, 5))
 
-        # Case 1: Forecast vs Actual
         if actual_col in filtered_df.columns and forecast_col in filtered_df.columns:
             df_metric = filtered_df[[time_col, actual_col, forecast_col]].dropna()
+
             if df_metric.empty:
-                print(f"No data for metric: {metric}")
+                print(f"No valid forecast/actual data for {metric}")
                 continue
 
-            fig.add_trace(go.Scatter(
-                x=df_metric[time_col],
-                y=df_metric[actual_col],
-                mode="lines+markers",
-                name=f"Actual {metric}"
-            ))
-            fig.add_trace(go.Scatter(
-                x=df_metric[time_col],
-                y=df_metric[forecast_col],
-                mode="lines+markers",
-                name=f"Forecast {metric}"
-            ))
-            fig.update_layout(title=f"{metric.capitalize()} Forecast vs Actual")
+            plt.plot(df_metric[time_col], df_metric[actual_col], marker='o', label=f"Actual {metric}")
+            plt.plot(df_metric[time_col], df_metric[forecast_col], marker='x', label=f"Forecast {metric}")
+            plt.title(f"{metric.capitalize()} Forecast vs Actual – {city_filter or 'All cities'}")
 
-        # Case 2: Just measured values (e.g. weather_current)
         elif metric in filtered_df.columns:
             for city in filtered_df["city"].unique():
                 city_df = filtered_df[filtered_df["city"] == city]
-                fig.add_trace(go.Scatter(
-                    x=city_df[time_col],
-                    y=city_df[metric],
-                    mode="lines+markers",
-                    name=city
-                ))
-            fig.update_layout(title=f"{metric.capitalize()} Measured (15-min intervals)")
+                plt.plot(city_df[time_col], city_df[metric], marker='o', label=city)
+            plt.title(f"{metric.capitalize()} Measured (15-min intervals) – {city_filter or 'All cities'}")
 
         else:
             print(f"Metric '{metric}' not found.")
             continue
 
-        fig.update_layout(
-            xaxis_title="Time",
-            yaxis_title=metric.capitalize(),
-            template="plotly_white",
-            legend=dict(x=0, y=1)
-        )
-        fig.show()
+        plt.xlabel("Time")
+        plt.ylabel(metric.capitalize())
+        plt.xticks(rotation=45)
+        plt.legend()
+        plt.tight_layout()
+        plt.grid(True)
+        plt.show()
+
 
 ```
 
@@ -187,6 +166,7 @@ for metric in metrics:
 
 
 ```python
+# DATA sample
 df.head(2)
 ```
 
@@ -289,6 +269,15 @@ df.head(2)
 </div>
 
 
+
+####  Forecast Error Summary
+
+This summary evaluates the accuracy of weather forecasts compared to actual measured data. Two key error metrics are used:
+
+- **MAE (Mean Absolute Error):** Represents the average size of prediction errors, regardless of direction.
+- **RMSE (Root Mean Squared Error):** Penalizes larger errors more heavily and emphasizes outliers.
+
+Lower values indicate more accurate predictions. In general, temperature, wind speed, and pressure forecasts are reasonably accurate. Larger discrepancies are seen in cloud cover and humidity, which are more variable and harder to predict precisely.
 
 
 ```python
@@ -457,72 +446,102 @@ compute_forecast_error_std(df, metrics_to_compare, city_filter="Prague")
 
 
 
-####  Forecast Error Summary
-
-This summary evaluates the accuracy of weather forecasts compared to actual measured data. Two key error metrics are used:
-
-- **MAE (Mean Absolute Error):** Represents the average size of prediction errors, regardless of direction.
-- **RMSE (Root Mean Squared Error):** Penalizes larger errors more heavily and emphasizes outliers.
-
-Lower values indicate more accurate predictions. In general, temperature, wind speed, and pressure forecasts are reasonably accurate. Larger discrepancies are seen in cloud cover and humidity, which are more variable and harder to predict precisely.
+####  Measured values 
 
 
 
 ```python
-plot_metrics_plotly(current_df_full, metrics_to_compare, time_col="as_of", city_filter="London")
-
-
-
+plot_metrics_matplotlib(current_df_full, metrics=metrics_to_compare, time_col="as_of", city_filter="London")
 ```
 
 
+    
+![png](comparison_files/comparison_9_0.png)
+    
 
 
 
+    
+![png](comparison_files/comparison_9_1.png)
+    
 
 
 
+    
+![png](comparison_files/comparison_9_2.png)
+    
 
 
 
+    
+![png](comparison_files/comparison_9_3.png)
+    
 
 
 
+    
+![png](comparison_files/comparison_9_4.png)
+    
+
+
+
+    
+![png](comparison_files/comparison_9_5.png)
+    
+
+
+
+    
+![png](comparison_files/comparison_9_6.png)
+    
+
+
+#### Comparison of measured value vs predicted value
 
 
 ```python
-plot_metrics_plotly(df, metrics_to_compare, time_col="as_of_hour", city_filter="Prague")
+plot_metrics_matplotlib(df, metrics=metrics_to_compare, time_col="as_of", city_filter="Prague")
+
 ```
 
 
+    
+![png](comparison_files/comparison_11_0.png)
+    
 
 
 
+    
+![png](comparison_files/comparison_11_1.png)
+    
 
 
 
+    
+![png](comparison_files/comparison_11_2.png)
+    
 
 
 
+    
+![png](comparison_files/comparison_11_3.png)
+    
 
 
 
-
-
-```python
-plot_metrics_plotly(df, metrics_to_compare, time_col="as_of_hour", city_filter="London")
-```
-
+    
+![png](comparison_files/comparison_11_4.png)
+    
 
 
 
+    
+![png](comparison_files/comparison_11_5.png)
+    
 
 
 
-
-
-
-
-
-
+    
+![png](comparison_files/comparison_11_6.png)
+    
 
