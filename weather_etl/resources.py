@@ -9,7 +9,7 @@ def pg_conn_resource(init_context):
         dbname="weatherdb",
         user="weather_user",
         password="supersecret",
-        host="localhost",  # nebo 'weather_pg' v docker-compose
+        host="localhost",  
         port=5432,
     )
     conn = psycopg2.connect(**db_params)

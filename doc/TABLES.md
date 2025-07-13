@@ -1,99 +1,100 @@
-# Databázové tabulky projektu Weather ETL
+# Database Tables – Weather ETL Project
 
-Tento dokument popisuje strukturu databázového schématu, které je využíváno ETL pipeline pro sběr a ukládání dat o počasí.
-
----
-
-## Schéma: `reporting_data`
+This document describes the structure of the PostgreSQL schema used by the ETL pipeline to collect and store weather data.
 
 ---
 
-### Tabulka: `weather_current`
-
-| Sloupec          | Typ               | Popis                              |
-|------------------|-------------------|------------------------------------|
-| id               | SERIAL PRIMARY KEY| Primární klíč                      |
-| city             | VARCHAR(50)       | Název města                        |
-| as_of            | TIMESTAMP         | Čas, ke kterému platí měření       |
-| temp_c           | DOUBLE PRECISION  | Teplota v °C                       |
-| temp_f           | DOUBLE PRECISION  | Teplota ve °F                      |
-| is_day           | SMALLINT          | Den (1) / Noc (0)                  |
-| condition_text   | TEXT              | Textový popis počasí               |
-| condition_icon   | TEXT              | Ikonka počasí                      |
-| condition_code   | INTEGER           | Kód podmínky počasí                |
-| wind_mph         | DOUBLE PRECISION  | Rychlost větru (mph)               |
-| wind_kph         | DOUBLE PRECISION  | Rychlost větru (kph)               |
-| wind_degree      | INTEGER           | Směr větru ve stupních             |
-| wind_dir         | VARCHAR(10)       | Zkratka směru větru (N, S, ...)    |
-| pressure_mb      | DOUBLE PRECISION  | Tlak v mb                          |
-| pressure_in      | DOUBLE PRECISION  | Tlak v in                          |
-| precip_mm        | DOUBLE PRECISION  | Srážky v mm                        |
-| precip_in        | DOUBLE PRECISION  | Srážky v in                        |
-| humidity         | INTEGER           | Vlhkost (%)                        |
-| cloud            | INTEGER           | Oblačnost (%)                      |
-| feelslike_c      | DOUBLE PRECISION  | Pociťovaná teplota v °C            |
-| feelslike_f      | DOUBLE PRECISION  | Pociťovaná teplota ve °F           |
-| windchill_c      | DOUBLE PRECISION  | Chill faktor v °C                  |
-| windchill_f      | DOUBLE PRECISION  | Chill faktor ve °F                 |
-| heatindex_c      | DOUBLE PRECISION  | Heat index v °C                    |
-| heatindex_f      | DOUBLE PRECISION  | Heat index ve °F                   |
-| dewpoint_c       | DOUBLE PRECISION  | Rosný bod v °C                     |
-| dewpoint_f       | DOUBLE PRECISION  | Rosný bod ve °F                    |
-| vis_km           | DOUBLE PRECISION  | Viditelnost v km                   |
-| vis_miles        | DOUBLE PRECISION  | Viditelnost v mílích               |
-| gust_mph         | DOUBLE PRECISION  | Nárazy větru mph                   |
-| gust_kph         | DOUBLE PRECISION  | Nárazy větru kph                   |
-| uv               | DOUBLE PRECISION  | UV index                           |
-| fetched_at       | TIMESTAMP         | Čas, kdy byl záznam získán         |
-
-#### Indexy
-- Unikátní index: **(city, as_of)**
+## Schema: `reporting_data`
 
 ---
 
-### Tabulka: `weather_forecast`
+### Table: `weather_current`
 
-| Sloupec                 | Typ               | Popis                               |
-|-------------------------|-------------------|-------------------------------------|
-| id                      | SERIAL PRIMARY KEY| Primární klíč                       |
-| city                    | VARCHAR(50)       | Název města                         |
-| forecast_for            | TIMESTAMP         | Čas předpovědi                      |
-| temp_c                  | DOUBLE PRECISION  | Teplota v °C                        |
-| temp_f                  | DOUBLE PRECISION  | Teplota ve °F                       |
-| is_day                  | SMALLINT          | Den/Noc                             |
-| condition_text          | TEXT              | Textový popis počasí                |
-| condition_icon          | TEXT              | Ikonka počasí                       |
-| condition_code          | INTEGER           | Kód podmínky počasí                 |
-| wind_mph                | DOUBLE PRECISION  | Rychlost větru (mph)                |
-| wind_kph                | DOUBLE PRECISION  | Rychlost větru (kph)                |
-| wind_degree             | INTEGER           | Směr větru ve stupních              |
-| wind_dir                | VARCHAR(10)       | Zkratka směru větru                 |
-| pressure_mb             | DOUBLE PRECISION  | Tlak v mb                           |
-| pressure_in             | DOUBLE PRECISION  | Tlak v in                           |
-| precip_mm               | DOUBLE PRECISION  | Srážky v mm                         |
-| precip_in               | DOUBLE PRECISION  | Srážky v in                         |
-| humidity                | INTEGER           | Vlhkost (%)                         |
-| cloud                   | INTEGER           | Oblačnost (%)                       |
-| feelslike_c             | DOUBLE PRECISION  | Pociťovaná teplota v °C             |
-| feelslike_f             | DOUBLE PRECISION  | Pociťovaná teplota ve °F            |
-| windchill_c             | DOUBLE PRECISION  | Chill faktor v °C                   |
-| windchill_f             | DOUBLE PRECISION  | Chill faktor ve °F                  |
-| heatindex_c             | DOUBLE PRECISION  | Heat index v °C                     |
-| heatindex_f             | DOUBLE PRECISION  | Heat index ve °F                    |
-| dewpoint_c              | DOUBLE PRECISION  | Rosný bod v °C                      |
-| dewpoint_f              | DOUBLE PRECISION  | Rosný bod ve °F                     |
-| will_it_rain            | SMALLINT          | Bude pršet (0/1)                    |
-| chance_of_rain          | SMALLINT          | Šance na déšť (%)                   |
-| vis_km                  | DOUBLE PRECISION  | Viditelnost v km                    |
-| vis_miles               | DOUBLE PRECISION  | Viditelnost v mílích                |
-| gust_mph                | DOUBLE PRECISION  | Nárazy větru mph                    |
-| gust_kph                | DOUBLE PRECISION  | Nárazy větru kph                    |
-| uv                      | DOUBLE PRECISION  | UV index                            |
-| prediction_generated_at | TIMESTAMP         | Kdy byla predikce vygenerována      |
-| fetched_at              | TIMESTAMP         | Čas, kdy byl záznam získán          |
+| Column          | Type               | Description                                |
+|-----------------|--------------------|--------------------------------------------|
+| id              | SERIAL PRIMARY KEY | Primary key                                |
+| city            | VARCHAR(50)        | City name                                  |
+| as_of           | TIMESTAMP          | Timestamp of the measurement               |
+| temp_c          | DOUBLE PRECISION   | Temperature in °C                          |
+| temp_f          | DOUBLE PRECISION   | Temperature in °F                          |
+| is_day          | SMALLINT           | Day (1) / Night (0)                         |
+| condition_text  | TEXT               | Text description of the weather condition  |
+| condition_icon  | TEXT               | Weather condition icon                     |
+| condition_code  | INTEGER            | Weather condition code                     |
+| wind_mph        | DOUBLE PRECISION   | Wind speed in mph                          |
+| wind_kph        | DOUBLE PRECISION   | Wind speed in kph                          |
+| wind_degree     | INTEGER            | Wind direction in degrees                  |
+| wind_dir        | VARCHAR(10)        | Wind direction abbreviation (e.g., N, S)   |
+| pressure_mb     | DOUBLE PRECISION   | Pressure in millibars                      |
+| pressure_in     | DOUBLE PRECISION   | Pressure in inches                         |
+| precip_mm       | DOUBLE PRECISION   | Precipitation in millimeters               |
+| precip_in       | DOUBLE PRECISION   | Precipitation in inches                    |
+| humidity        | INTEGER            | Humidity (%)                               |
+| cloud           | INTEGER            | Cloud cover (%)                            |
+| feelslike_c     | DOUBLE PRECISION   | Feels-like temperature in °C               |
+| feelslike_f     | DOUBLE PRECISION   | Feels-like temperature in °F               |
+| windchill_c     | DOUBLE PRECISION   | Wind chill in °C                           |
+| windchill_f     | DOUBLE PRECISION   | Wind chill in °F                           |
+| heatindex_c     | DOUBLE PRECISION   | Heat index in °C                           |
+| heatindex_f     | DOUBLE PRECISION   | Heat index in °F                           |
+| dewpoint_c      | DOUBLE PRECISION   | Dew point in °C                            |
+| dewpoint_f      | DOUBLE PRECISION   | Dew point in °F                            |
+| vis_km          | DOUBLE PRECISION   | Visibility in kilometers                   |
+| vis_miles       | DOUBLE PRECISION   | Visibility in miles                        |
+| gust_mph        | DOUBLE PRECISION   | Wind gusts in mph                          |
+| gust_kph        | DOUBLE PRECISION   | Wind gusts in kph                          |
+| uv              | DOUBLE PRECISION   | UV index                                   |
+| fetched_at      | TIMESTAMP          | Timestamp when the data was fetched        |
 
-#### Indexy
-- Unikátní index: **(city, forecast_for, prediction_generated_at)**
+**Indexes:**
+- Unique index: `(city, as_of)`
+
+---
+
+### Table: `weather_forecast`
+
+| Column                 | Type               | Description                                |
+|------------------------|--------------------|--------------------------------------------|
+| id                     | SERIAL PRIMARY KEY | Primary key                                |
+| city                   | VARCHAR(50)        | City name                                  |
+| forecast_for           | TIMESTAMP          | Forecast timestamp                         |
+| temp_c                 | DOUBLE PRECISION   | Temperature in °C                          |
+| temp_f                 | DOUBLE PRECISION   | Temperature in °F                          |
+| is_day                 | SMALLINT           | Day/Night indicator                        |
+| condition_text         | TEXT               | Text description of the weather condition  |
+| condition_icon         | TEXT               | Weather condition icon                     |
+| condition_code         | INTEGER            | Weather condition code                     |
+| wind_mph               | DOUBLE PRECISION   | Wind speed in mph                          |
+| wind_kph               | DOUBLE PRECISION   | Wind speed in kph                          |
+| wind_degree            | INTEGER            | Wind direction in degrees                  |
+| wind_dir               | VARCHAR(10)        | Wind direction abbreviation (e.g., N, S)   |
+| pressure_mb            | DOUBLE PRECISION   | Pressure in millibars                      |
+| pressure_in            | DOUBLE PRECISION   | Pressure in inches                         |
+| precip_mm              | DOUBLE PRECISION   | Precipitation in millimeters               |
+| precip_in              | DOUBLE PRECISION   | Precipitation in inches                    |
+| humidity               | INTEGER            | Humidity (%)                               |
+| cloud                  | INTEGER            | Cloud cover (%)                            |
+| feelslike_c            | DOUBLE PRECISION   | Feels-like temperature in °C               |
+| feelslike_f            | DOUBLE PRECISION   | Feels-like temperature in °F               |
+| windchill_c            | DOUBLE PRECISION   | Wind chill in °C                           |
+| windchill_f            | DOUBLE PRECISION   | Wind chill in °F                           |
+| heatindex_c            | DOUBLE PRECISION   | Heat index in °C                           |
+| heatindex_f            | DOUBLE PRECISION   | Heat index in °F                           |
+| dewpoint_c             | DOUBLE PRECISION   | Dew point in °C                            |
+| dewpoint_f             | DOUBLE PRECISION   | Dew point in °F                            |
+| will_it_rain           | SMALLINT           | Will it rain? (0 = No, 1 = Yes)            |
+| chance_of_rain         | SMALLINT           | Probability of rain (%)                    |
+| vis_km                 | DOUBLE PRECISION   | Visibility in kilometers                   |
+| vis_miles              | DOUBLE PRECISION   | Visibility in miles                        |
+| gust_mph               | DOUBLE PRECISION   | Wind gusts in mph                          |
+| gust_kph               | DOUBLE PRECISION   | Wind gusts in kph                          |
+| uv                     | DOUBLE PRECISION   | UV index                                   |
+| prediction_generated_at| TIMESTAMP          | Timestamp when prediction was generated    |
+| fetched_at             | TIMESTAMP          | Timestamp when the data was fetched        |
+
+**Indexes:**
+- Unique index: `(city, forecast_for, prediction_generated_at)`
+
 
 
 
