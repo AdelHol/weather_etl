@@ -3,8 +3,13 @@ from datetime import datetime, timedelta
 import logging
 import requests
 from dagster import asset, Failure
+from dotenv import load_dotenv
 
-API_KEY = "26769031bd1844a6a6d130049250907"
+load_dotenv()
+
+API_KEY = os.getenv("WEATHER_API_KEY")
+if not API_KEY:
+    raise ValueError("Missing WEATHER_API_KEY in environment.")
 CITIES = ["Prague", "London"]
 
 SQL_PATH = os.path.join(os.path.dirname(__file__), "sql/create_schema_and_tables.sql")
