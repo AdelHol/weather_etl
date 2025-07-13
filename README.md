@@ -1,68 +1,68 @@
 # Delta Green
 
-## Zadání
+## Assignment
 
-### Část 1: Sběr dat o počasí
+### Part 1: Weather Data Collection
 
-Vytvořte **ETL pipeline** s využitím nástroje pro orchestraci jobů (např. **Dagster**, **Prefect** nebo jiný dle vašeho výběru).
+Create an **ETL pipeline** using a job orchestration tool (e.g. **Dagster**, **Prefect**, or another of your choice).
 
-**Cíl:**  
-Data budou sloužit datovému analytikovi pro následující účely:
-- Vytvoření **dashboardu**, kde bude porovnávat predikce s realitou.
-- Jako **vstup do dalších výpočtů**, které budou využívat poslední verzi predikce v libovolném čase.
+**Goal:**  
+The data will serve a data analyst for the following purposes:
+- To create a **dashboard** comparing forecasts to actual values.
+- As **input for further calculations** using the latest version of the forecast at any given time.
 
-**Zdroj:**  
-Využijte **API z webu [WeatherAPI.com](https://www.weatherapi.com/)**.  
-Pro přístup k API se zaregistrujte (postačí e-mailová adresa).  
-Po registraci začne běžet **14denní zkušební verze**, která se po uplynutí automaticky přepne na **bezplatný plán**.
+**Source:**  
+Use the **API from [WeatherAPI.com](https://www.weatherapi.com/)**.  
+Register with your email address to access the API.  
+A **14-day trial** will start upon registration and will automatically switch to the **free plan** after expiration.
 
-**Frekvence:**  
-Každých **15 minut** stáhněte aktuální data o počasí a jeho **predikci na následujících 48 hodin**.
+**Frequency:**  
+Download current weather data and a **48-hour forecast** every **15 minutes**.
 
-**Lokality:**  
-- Praha  
-- Londýn
+**Locations:**  
+- Prague  
+- London
 
-**Ukládání dat:**  
-Data vhodně uložte do **databáze**. Ideální volbou je **PostgreSQL spuštěný v Dockeru**.  
-Nemusíte se zabývat databázovými migracemi, postačí, když budou tabulky vytvořeny jednorázově pomocí `.sql` souboru.
+**Data Storage:**  
+Store the data in a suitable **database**, ideally **PostgreSQL running in Docker**.  
+There is no need to implement migrations — it's sufficient to create the tables once using a `.sql` file.
 
-**Dostupnost dat:**  
-Data by měla být k dispozici pro uvedené účely s **minimálními časovými prodlevami**.
-
----
-
-### Část 2: Načtení dat
-
-Vytvořte **Jupyter Notebook**, ve kterém načtete data z databáze s **poslední verzí predikce pro každou hodinu**.
+**Data Availability:**  
+The data should be available for the purposes described above with **minimal latency**.
 
 ---
 
-## Řešení
+### Part 2: Data Loading
 
-Projekt je rozdělen do několika částí:
+Create a **Jupyter Notebook** that loads the data from the database with the **latest forecast version for each hour**.
 
-### 1. ETL pipeline (Dagster)
+---
 
-- Kód najdete ve složce [`weather_etl/`](./weather_etl)
-- Spouští se pravidelně a:
-  - Stahuje data z WeatherAPI (aktuální i forecast)
-  - Ukládá je do PostgreSQL databáze (včetně zpětného doplnění 15min hodnot)
-  -  [`weather_etl/README.md`](./weather_etl/README.md)
+## Solution
 
-### 2. Databáze
+The project is divided into several components:
 
-- Používá se **PostgreSQL** (např. běžící přes Docker)
-- Tabulky se vytváří pomocí skriptu [`sql/create_schema_and_tables.sql`](./weather_etl/sql/create_schema_and_tables.sql)
-- dokumnetace [`doc/TABLES.md`](./doc/TABLES.md)
+### 1. ETL Pipeline (Dagster)
 
-###  3. Analýza dat
+- Code is located in the [`weather_etl/`](./weather_etl) directory
+- It runs on a regular schedule and:
+  - Downloads data from WeatherAPI (current and forecast)
+  - Stores it in a PostgreSQL database (including 15-minute backfilling)
+  - See [`weather_etl/README.md`](./weather_etl/README.md)
 
-- Notebook [`notebooks/comparison.ipynb`](./notebooks/comparison.ipynb) provádí:
-  - Načtení aktuálních a predikovaných dat
-  - Výpočet chyb (MAE, RMSE, směrodatná odchylka)
-  - Porovnání predikce s realitou
-  - Vizualizace pomocí `matplotlib` 
+### 2. Database
+
+- Uses **PostgreSQL** (e.g. via Docker)
+- Tables are created using [`sql/create_schema_and_tables.sql`](./weather_etl/sql/create_schema_and_tables.sql)
+- Documentation: [`doc/TABLES.md`](./doc/TABLES.md)
+
+### 3. Data Analysis
+
+- Notebook [`notebooks/comparison.ipynb`](./notebooks/comparison.ipynb) performs:
+  - Loading of actual and forecasted data
+  - Computation of errors (MAE, RMSE, standard deviation)
+  - Comparison of forecast to reality
+  - Visualization using `matplotlib`
 
 
 
