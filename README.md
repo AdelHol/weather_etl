@@ -54,6 +54,7 @@ Projekt je rozdělen do několika částí:
 
 - Používá se **PostgreSQL** (např. běžící přes Docker)
 - Tabulky se vytváří pomocí skriptu [`sql/create_schema_and_tables.sql`](./weather_etl/sql/create_schema_and_tables.sql)
+- dokumnetace [`doc/TABLES.md`](./doc/TABLES.md)
 
 ###  3. Analýza dat
 
