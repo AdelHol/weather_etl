@@ -37,12 +37,6 @@ To run the ETL job every 15 minutes:
 - Ensure the schedule toggle is ON in the Dagster UI
 - Dagster Daemon must be running (handled by `dagster dev`)
 
-## Deployment
-
-This project can be deployed via [Dagster+](https://docs.dagster.io/dagster-plus/).
-
-For more details, refer to the official documentation.
-
 ## API Info
 
 - Provider: [WeatherAPI](https://www.weatherapi.com/)
