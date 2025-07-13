@@ -9,18 +9,10 @@ from dotenv import load_dotenv
 import os
 ```
 
-```python
 
+```python
 load_dotenv()
 engine = create_engine(os.getenv("DATABASE_URL"))
-```
-
-
-```python
-metrics = [
-    'temp_c', 'wind_kph', 'humidity', 'precip_mm',
-    'pressure_mb', 'cloud', 'feelslike_c'
-]
 ```
 
 
@@ -40,6 +32,34 @@ def compute_errors(df, metrics):
                 "rmse": (df[error_col] ** 2).mean() ** 0.5,
             }
     return df, summary
+
+def compute_forecast_error_std(df, metrics, city_filter=None):
+
+    filtered_df = df.copy()
+    if city_filter:
+        filtered_df = filtered_df[filtered_df['city'] == city_filter]
+
+    results = []
+    for metric in metrics:
+        actual_col = f"{metric}_actual"
+        forecast_col = f"{metric}_forecast"
+
+        if actual_col not in filtered_df.columns or forecast_col not in filtered_df.columns:
+            continue
+
+        errors = filtered_df[forecast_col] - filtered_df[actual_col]
+        errors = errors.dropna()
+
+        if not errors.empty:
+            std_dev = errors.std()
+            results.append({
+                "city": city_filter or "All",
+                "metric": metric,
+                "std_dev": round(std_dev, 3),
+                "n": len(errors)
+            })
+
+    return pd.DataFrame(results)
 
 def plot_metrics_plotly(df, metrics, time_col="as_of", city_filter=None):
     """
@@ -272,7 +292,7 @@ df.head(2)
 
 
 ```python
-# Errors
+
 metrics_to_compare = ['temp_c', 'wind_kph', 'humidity', 'precip_mm',
                       'pressure_mb', 'cloud', 'feelslike_c']
 comparison_df, summary = compute_errors(df, metrics_to_compare)
@@ -348,6 +368,95 @@ pd.DataFrame(summary).T
 
 
 
+
+```python
+
+compute_forecast_error_std(df, metrics_to_compare, city_filter="Prague")
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>city</th>
+      <th>metric</th>
+      <th>std_dev</th>
+      <th>n</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Prague</td>
+      <td>temp_c</td>
+      <td>1.048</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Prague</td>
+      <td>wind_kph</td>
+      <td>2.503</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Prague</td>
+      <td>humidity</td>
+      <td>12.165</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Prague</td>
+      <td>precip_mm</td>
+      <td>0.199</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Prague</td>
+      <td>pressure_mb</td>
+      <td>0.518</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>Prague</td>
+      <td>cloud</td>
+      <td>31.437</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>Prague</td>
+      <td>feelslike_c</td>
+      <td>0.966</td>
+      <td>8</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
 ####  Forecast Error Summary
 
 This summary evaluates the accuracy of weather forecasts compared to actual measured data. Two key error metrics are used:
@@ -375,11 +484,14 @@ plot_metrics_plotly(current_df_full, metrics_to_compare, time_col="as_of", city_
 
 
 
+
+
+
+
+
+
 ```python
-metrics_to_plot = ['temp_c', 'humidity', 'wind_kph', 'precip_mm']
-plot_measured_metrics_plotly(current_df_full, metrics_to_plot, city_filter='Prague')
-
-
+plot_metrics_plotly(df, metrics_to_compare, time_col="as_of_hour", city_filter="Prague")
 ```
 
 
@@ -391,10 +503,14 @@ plot_measured_metrics_plotly(current_df_full, metrics_to_plot, city_filter='Prag
 
 
 
+
+
+
+
+
+
 ```python
-
-plot_forecast_vs_actual_plotly(df, metrics_to_compare, city_filter='Prague')
-
+plot_metrics_plotly(df, metrics_to_compare, time_col="as_of_hour", city_filter="London")
 ```
 
 
@@ -406,76 +522,7 @@ plot_forecast_vs_actual_plotly(df, metrics_to_compare, city_filter='Prague')
 
 
 
-```python
-metrics_to_compare = ['temp_c', 'wind_kph', 'humidity', 'precip_mm']
-plot_forecast_vs_actual_plotly(df, metrics_to_compare, city_filter='London')
-```
 
 
 
 
-
-
-
-
-
-
-```python
-analyze_forecast_error_trends(df, metrics_to_compare, city_filter="Praha")
-```
-
-    No error data for temp_c
-    No error data for wind_kph
-    No error data for humidity
-    No error data for precip_mm
-
-
-
-```python
-def analyze_forecast_error_trends(df, metrics, city_filter=None):
-    """Analyze error trends for each metric, detect turning points and linear trends."""
-    TURN_PARAMETER = 2
-    EPS = 1e-3
-
-    filtered_df = df.copy()
-    if city_filter:
-        filtered_df = filtered_df[filtered_df['city'] == city_filter]
-
-    for metric in metrics:
-        error_col = f"error_{metric}"
-        if error_col not in filtered_df.columns:
-            continue
-
-        series = filtered_df[error_col].dropna().reset_index(drop=True)
-        if series.empty:
-            print(f"No error data for {metric}")
-            continue
-
-        print(f"\nAnalyzing error trend for: {metric}")
-        values = series.tolist()
-        turning_points = []
-
-        for i in range(1, len(values) - 2):
-            next_val, next_next_val = values[i + 1] + EPS, values[i + 2] + EPS
-            if abs(values[i] / next_val) > TURN_PARAMETER and abs(values[i] / next_next_val) > TURN_PARAMETER:
-                turning_points.append(i + 1)
-
-        print(f"Turning points: {turning_points}")
-
-        segments = [values[:turning_points[0]]] if turning_points else [values]
-        for i in range(len(turning_points)):
-            start = turning_points[i]
-            end = turning_points[i + 1] if i + 1 < len(turning_points) else None
-            segments.append(values[start:end])
-
-        for seg in segments:
-            if len(seg) < 2:
-                continue
-            x = list(range(len(seg)))
-            try:
-                a, b = np.polyfit(x, seg, 1)
-                trend = "increasing" if a > 0 else "decreasing" if a < 0 else "flat"
-                print(f"Segment trend: {trend}, slope: {a:.4f}, intercept: {b:.4f}")
-            except Exception as e:
-                print(f"Trend analysis failed: {e}")
-```
