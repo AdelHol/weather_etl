@@ -12,7 +12,3 @@ defs = Definitions(
     schedules=[weather_etl_schedule],
     resources={"pg_conn": pg_conn_resource},
 )
-
-
-
-

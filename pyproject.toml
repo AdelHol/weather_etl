@@ -1,18 +1,23 @@
 [project]
 name = "weather_etl"
 version = "0.1.0"
-description = "Add your description here"
+description = "Weather ETL pipeline using Dagster and WeatherAPI"
 readme = "README.md"
 requires-python = ">=3.9,<=3.13.3"
+
 dependencies = [
     "dagster",
     "dagster-cloud",
+    "psycopg2-binary",
+    "requests",
+    "python-dotenv",
+    "pandas"
 ]
 
 [project.optional-dependencies]
 dev = [
-    "dagster-webserver", 
-    "pytest",
+    "dagster-webserver",
+    "pytest"
 ]
 
 [build-system]
@@ -24,4 +29,4 @@ module_name = "weather_etl.definitions"
 code_location_name = "weather_etl"
 
 [tool.setuptools.packages.find]
-exclude=["weather_etl_tests"]
+exclude = ["weather_etl_tests"]

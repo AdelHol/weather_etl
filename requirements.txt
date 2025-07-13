@@ -1,6 +1,0 @@
-dagster
-psycopg2-binary
-requests
-python-dotenv
-
-pandas
