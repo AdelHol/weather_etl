@@ -1,47 +1,111 @@
-# weather_etl
+# Weather ETL Project 🌦️
 
-This is a [Dagster](https://dagster.io/) project scaffolded with [`dagster project scaffold`](https://docs.dagster.io/guides/build/projects/creating-a-new-project).
+This Dagster-based pipeline periodically collects, backfills, and stores weather data (both current and forecasted) from [WeatherAPI](https://www.weatherapi.com/), ensuring robust coverage even in case of job outages.
 
-## Getting started
+## 🔧 Setup
 
-First, install your Dagster code location as a Python package. By using the --editable flag, pip will install your Python package in ["editable mode"](https://pip.pypa.io/en/latest/topics/local-project-installs/#editable-installs) so that as you develop, local code changes will automatically apply.
+Install locally in editable mode:
 
 ```bash
 pip install -e ".[dev]"
 ```
 
-Then, start the Dagster UI web server:
+Start the Dagster development server:
 
 ```bash
 dagster dev
 ```
 
-Open http://localhost:3000 with your browser to see the project.
+Then open [http://localhost:3000](http://localhost:3000) to explore the UI.
 
-You can start writing assets in `weather_etl/assets.py`. The assets are automatically loaded into the Dagster code location as you define them.
+---
 
-## Development
+## 📅 Assets Summary
 
-### Adding new Python dependencies
+### `test_db_connection`
+Checks the availability of the PostgreSQL database.
 
-You can specify new Python dependencies in `setup.py`.
+### `create_tables`
+Creates the necessary schema and tables via SQL located in `sql/create_schema_and_tables.sql`.
 
-### Unit testing
+### `fetch_and_store_all_cities`
+Main ETL logic:
 
-Tests are in the `weather_etl_tests` directory and you can run tests using `pytest`:
+- **Fetches** current and hourly forecast data for `Prague` and `London`
+- **Stores** current weather in `reporting_data.weather_current`
+- **Stores** forecast data in `reporting_data.weather_forecast`
+- **Backfills** historical 15-minute resolution current measurements up to **6 hours** ago using the `history.json` endpoint
+- **De-duplicates** using `ON CONFLICT` constraints
+- Logs the number of missing timestamps successfully backfilled
 
+---
+
+## 📊 Metrics & Comparison
+
+The pipeline supports forecast evaluation with:
+
+- **MAE (Mean Absolute Error)**
+- **RMSE (Root Mean Squared Error)**
+
+...computed for metrics like temperature, wind speed, humidity, cloud cover, etc.
+
+Use visualization functions to:
+
+- Compare forecasted vs. actual time series
+- Analyze error trends (increasing/decreasing)
+
+---
+
+## Database Tables
+
+- `weather_current`: one row per city & 15-min interval measurement
+- `weather_forecast`: forecast horizon per city per hour
+
+Both tables are updated idempotently using `ON CONFLICT`.
+
+---
+
+## Scheduling
+
+To run every 15 minutes:
+- Ensure the **schedule toggle** is ON in the Dagster UI
+- Dagster Daemon must be running (handled by `dagster dev`)
+
+---
+
+##  Deployment
+
+This project can be deployed easily via [Dagster+](https://docs.dagster.io/dagster-plus/).
+
+For more details, refer to the official documentation.
+
+---
+
+## API Info
+
+- Provider: [WeatherAPI](https://www.weatherapi.com/)
+- Endpoints used:
+  - `/forecast.json`
+  - `/history.json`
+- Cities: `Prague`, `London`
+
+---
+
+## Example Commands
+
+Run tests:
 ```bash
 pytest weather_etl_tests
 ```
 
-### Schedules and sensors
+Add a new Python dependency:
+```bash
+# Edit setup.py under install_requires
+```
 
-If you want to enable Dagster [Schedules](https://docs.dagster.io/guides/automate/schedules/) or [Sensors](https://docs.dagster.io/guides/automate/sensors/) for your jobs, the [Dagster Daemon](https://docs.dagster.io/guides/deploy/execution/dagster-daemon) process must be running. This is done automatically when you run `dagster dev`.
+---
 
-Once your Dagster Daemon is running, you can start turning on schedules and sensors for your jobs.
+For detailed asset logic, see `weather_etl/assets.py`
 
-## Deploy on Dagster+
+---
 
-The easiest way to deploy your Dagster project is to use Dagster+.
-
-Check out the [Dagster+ documentation](https://docs.dagster.io/dagster-plus/) to learn more.

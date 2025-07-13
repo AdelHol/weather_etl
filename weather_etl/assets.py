@@ -1,7 +1,6 @@
-# weather_etl/assets.py
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import requests
 from dagster import asset, Failure
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @asset(required_resource_keys={"pg_conn"})
 def test_db_connection(context):
-    """Ověří DB připojení."""
+    """Verify database connection."""
     try:
         conn = context.resources.pg_conn
         context.log.info("DB connection successful.")
@@ -29,7 +28,7 @@ def test_db_connection(context):
 
 @asset(required_resource_keys={"pg_conn"}, deps=[test_db_connection])
 def create_tables(context):
-    """Vytvoří schéma a tabulky podle SQL souboru."""
+    """Create schema and tables based on SQL file."""
     conn = context.resources.pg_conn
     cur = conn.cursor()
     try:
@@ -49,10 +48,12 @@ def create_tables(context):
 
 @asset(required_resource_keys={"pg_conn"})
 def fetch_and_store_all_cities(context):
-    """Stáhne aktuální i forecast počasí pro všechna města a uloží do DB."""
+    """Fetch current and forecast weather for all cities and store in DB, including historical backfill if missing."""
     conn = context.resources.pg_conn
     cur = conn.cursor()
     errors = []
+    backfill_count = 0
+
     for city in CITIES:
         try:
             context.log.info(f"Fetching weather for {city}")
@@ -114,7 +115,7 @@ def fetch_and_store_all_cities(context):
                     fetched_at,
                 ),
             )
-            # Forecast počasí (každá hodina)
+
             gen_time = datetime.utcnow()
             for day in data["forecast"]["forecastday"]:
                 for hour in day["hour"]:
@@ -172,11 +173,94 @@ def fetch_and_store_all_cities(context):
                             fetched_at,
                         ),
                     )
+
+            # Extended backfill for 15min-resolution data up to 6 hours back
+            for offset in range(1, 6 * 4 + 1):  # every 15 min for 6 hours
+                quarter_ts = datetime.utcnow() - timedelta(minutes=offset * 15)
+                check_time = quarter_ts.replace(second=0, microsecond=0)
+                cur.execute(
+                    "SELECT 1 FROM reporting_data.weather_current WHERE city = %s AND as_of = %s",
+                    (city, check_time),
+                )
+                if not cur.fetchone():
+                    hist_url = "http://api.weatherapi.com/v1/history.json"
+                    hist_params = {
+                        "key": API_KEY,
+                        "q": city,
+                        "dt": check_time.strftime("%Y-%m-%d"),
+                        "hour": check_time.hour,
+                    }
+                    hist_resp = requests.get(hist_url, params=hist_params)
+                    hist_resp.raise_for_status()
+                    hist_data = hist_resp.json()
+                    if hist_data.get("forecast", {}).get("forecastday"):
+                        for hour_data in hist_data["forecast"]["forecastday"][0].get(
+                            "hour", []
+                        ):
+                            time_epoch = datetime.fromtimestamp(hour_data["time_epoch"])
+                            if time_epoch == check_time:
+                                context.log.info(
+                                    f"Backfilled missing 15-min record for {city} at {check_time}"
+                                )
+                                backfill_count += 1
+                                cur.execute(  # same insert as above
+                                    """
+                                    INSERT INTO reporting_data.weather_current (
+                                        city, as_of, temp_c, temp_f, is_day,
+                                        condition_text, condition_icon, condition_code,
+                                        wind_mph, wind_kph, wind_degree, wind_dir,
+                                        pressure_mb, pressure_in, precip_mm, precip_in,
+                                        humidity, cloud, feelslike_c, feelslike_f,
+                                        windchill_c, windchill_f, heatindex_c, heatindex_f,
+                                        dewpoint_c, dewpoint_f, vis_km, vis_miles,
+                                        gust_mph, gust_kph, uv, fetched_at
+                                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                    ON CONFLICT (city, as_of) DO UPDATE SET fetched_at = EXCLUDED.fetched_at
+                                    """,
+                                    (
+                                        city,
+                                        check_time,
+                                        hour_data.get("temp_c"),
+                                        hour_data.get("temp_f"),
+                                        hour_data.get("is_day"),
+                                        hour_data["condition"]["text"],
+                                        hour_data["condition"]["icon"],
+                                        hour_data["condition"]["code"],
+                                        hour_data.get("wind_mph"),
+                                        hour_data.get("wind_kph"),
+                                        hour_data.get("wind_degree"),
+                                        hour_data.get("wind_dir"),
+                                        hour_data.get("pressure_mb"),
+                                        hour_data.get("pressure_in"),
+                                        hour_data.get("precip_mm"),
+                                        hour_data.get("precip_in"),
+                                        hour_data.get("humidity"),
+                                        hour_data.get("cloud"),
+                                        hour_data.get("feelslike_c"),
+                                        hour_data.get("feelslike_f"),
+                                        hour_data.get("windchill_c"),
+                                        hour_data.get("windchill_f"),
+                                        hour_data.get("heatindex_c"),
+                                        hour_data.get("heatindex_f"),
+                                        hour_data.get("dewpoint_c"),
+                                        hour_data.get("dewpoint_f"),
+                                        hour_data.get("vis_km"),
+                                        hour_data.get("vis_miles"),
+                                        hour_data.get("gust_mph"),
+                                        hour_data.get("gust_kph"),
+                                        hour_data.get("uv"),
+                                        fetched_at,
+                                    ),
+                                )
             conn.commit()
-            context.log.info(f"Inserted data for {city}")
+            context.log.info(
+                f"Inserted weather + forecast data for {city}. Backfilled {backfill_count} records."
+            )
         except Exception as e:
             context.log.error(f"Error for {city}: {e}")
             errors.append(f"{city}: {e}")
+
+    context.log.info(f"Total backfilled records across cities: {backfill_count}")
     cur.close()
     conn.close()
     if errors:
