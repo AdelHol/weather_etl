@@ -36,3 +36,37 @@ Data by měla být k dispozici pro uvedené účely s **minimálními časovými
 
 Vytvořte **Jupyter Notebook**, ve kterém načtete data z databáze s **poslední verzí predikce pro každou hodinu**.
 
+---
+
+## Řešení
+
+Projekt je rozdělen do několika částí:
+
+### 1. ETL pipeline (Dagster)
+
+- Kód najdete ve složce [`weather_etl/`](./weather_etl)
+- Spouští se pravidelně a:
+  - Stahuje data z WeatherAPI (aktuální i forecast)
+  - Ukládá je do PostgreSQL databáze (včetně zpětného doplnění 15min hodnot)
+  -  [`weather_etl/README.md`](./weather_etl/README.md)
+
+### 2. Databáze
+
+- Používá se **PostgreSQL** (např. běžící přes Docker)
+- Tabulky se vytváří pomocí skriptu [`sql/create_schema_and_tables.sql`](./weather_etl/sql/create_schema_and_tables.sql)
+
+###  3. Analýza dat
+
+- Notebook [`notebooks/comparison.ipynb`](./notebooks/comparison.ipynb) provádí:
+  - Načtení aktuálních a predikovaných dat
+  - Výpočet chyb (MAE, RMSE, směrodatná odchylka)
+  - Porovnání predikce s realitou
+  - Vizualizace pomocí `plotly` 
+
+### 4. Bezpečnost
+
+- API klíče a přístupové údaje jsou načítány z `.env` souboru
+- `.env` **není součástí repozitáře** – musí být vytvořen ručně
+
+Ukázka `.env`:
+
