@@ -2,22 +2,6 @@
 
 This Dagster-based pipeline periodically collects, backfills, and stores weather data (both current and forecasted) from [WeatherAPI](https://www.weatherapi.com/), ensuring robust coverage even in case of job outages.
 
-## Setup
-
-Install locally in editable mode:
-
-```bash
-pip install -e ".[dev]"
-```
-
-Start the Dagster development server:
-
-```bash
-dagster dev
-```
-
-Then open [http://localhost:3000](http://localhost:3000) to explore the UI.
-
 ## Assets Summary
 
 ### `test_db_connection`
